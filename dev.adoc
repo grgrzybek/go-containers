@@ -11,3 +11,32 @@ First things to do after importing the project into Idea:
 <component name="Go" enabled="true" />
 ----
 to `go-containers.iml`.
+
+After adding typical structure and empty '*.go' files, in one of the files I put:
+
+[source,go]
+----
+import (
+    "github.com/spf13/cobra"
+)
+----
+
+Idea showed an error and `Alt-Enter` suggested `go get -t github.com/spf13/cobra`. `go.mod` didn't change, but:
+
+* packages were downloaded to `$GOPATH/src`.
+* ~/.cache/go-build was not affected
+* `$GOPATH/pkg` was not affected
+
+Trying to build `hello/main.go` (with `package main` and `main()` function) from root directory of the project:
+
+----
+10:04 $ go build
+no Go files in /home/ggrzybek/sources/github.com/grgrzybek/go-containers
+
+10:04 $ go build cmd/hello
+package cmd/hello is not in GOROOT (/usr/lib/golang/src/cmd/hello)
+
+10:04 $ go build -o bin/hello github.com/grgrzybek/go-containers/cmd/hello
+cmd/hello/main.go:19:8: no required module provides package github.com/spf13/cobra; to add it:
+	go get github.com/spf13/cobra
+----
