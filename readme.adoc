@@ -1,0 +1,4 @@
+= Containers/storage/images interaction using Go
+
+This project contains Go commands/packages that use github.com/containers libraries.
+The same libraries are used both by https://github.com/containers/podman[podman] and https://github.com/cri-o/cri-o[cri-o].
