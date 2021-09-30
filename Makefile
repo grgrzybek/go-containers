@@ -16,7 +16,7 @@
 
 FILES = \
 	internal/app/gggc.go \
-	internal/cmd/common/common.go \
+	internal/cmd/config/config.go \
 	cmd/gggc/main.go
 
 all: bin/hello bin/gggc

@@ -18,7 +18,7 @@ package main
 
 import (
 	"github.com/grgrzybek/go-containers/internal/app"
-	_ "github.com/grgrzybek/go-containers/internal/cmd/common"
+	_ "github.com/grgrzybek/go-containers/internal/cmd/config"
 )
 
 func main() {

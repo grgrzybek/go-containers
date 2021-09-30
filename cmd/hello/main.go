@@ -16,15 +16,24 @@
 
 package main
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "hello",
 	Short: "Using libraries for container management",
+	PersistentPreRunE: preRun,
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = cmd.Usage()
 	},
 	Version: "0.1.0",
+}
+
+func preRun(_ *cobra.Command, _ []string) error {
+	fmt.Println("I'm preRun() function!")
+	return nil
 }
 
 func main() {

@@ -2,3 +2,20 @@
 
 This project contains Go commands/packages that use github.com/containers libraries.
 The same libraries are used both by https://github.com/containers/podman[podman] and https://github.com/cri-o/cri-o[cri-o].
+
+== Observations
+
+.Location of the configuration files
+
+`github.com/containers/common/pkg/config` is a configuration related package. When used, I could print the expected:
+----
+11:54 $ bin/gggc common
+Hello containers/common
+Default containers configuration: /usr/share/containers/containers.conf
+config.Path(): /home/ggrzybek/.config/containers/containers.conf
+
+11:54 $ sudo bin/gggc common
+Hello containers/common
+Default containers configuration: /usr/share/containers/containers.conf
+config.Path(): /etc/containers/containers.conf
+----
