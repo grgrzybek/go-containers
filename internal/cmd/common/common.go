@@ -14,13 +14,23 @@
  * limitations under the License.
  */
 
-package main
+package common
 
 import (
-	"github.com/grgrzybek/go-containers/internal/app"
-	_ "github.com/grgrzybek/go-containers/internal/cmd/common"
+	"fmt"
+	gggc "github.com/grgrzybek/go-containers/internal/app"
+	"github.com/spf13/cobra"
 )
 
-func main() {
-	gggc.Execute()
+func init() {
+	var cmd = &cobra.Command{
+		Use:   "common",
+		Short: "Using containers/common library",
+		Run:   run,
+	}
+	gggc.RootCmd.AddCommand(cmd)
+}
+
+func run(_ *cobra.Command, _ []string) {
+	fmt.Printf("Hello containers/common\n")
 }

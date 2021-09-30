@@ -14,13 +14,30 @@
  * limitations under the License.
  */
 
-package main
+package gggc
 
 import (
-	"github.com/grgrzybek/go-containers/internal/app"
-	_ "github.com/grgrzybek/go-containers/internal/cmd/common"
+	"fmt"
+	"github.com/spf13/cobra"
+	"os"
 )
 
-func main() {
-	gggc.Execute()
+var RootCmd *cobra.Command
+
+func init() {
+	RootCmd = &cobra.Command{
+		Use:   "gggc",
+		Short: "Using libraries for container management",
+		Run: func(cmd *cobra.Command, args []string) {
+			_ = cmd.Usage()
+		},
+		Version: "0.1.0",
+	}
+}
+
+func Execute() {
+	if err := RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
