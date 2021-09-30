@@ -1,0 +1,13 @@
+= Dev comments
+
+First things to do after importing the project into Idea:
+
+* "GOROOT is not defined" -> set GOROOT in _File | Settings | Languages & Frameworks | Go | GOROOT_
+* enable Go modules in _File | Settings | Languages & Frameworks | Go | Go Modules_
+* "Go support is disabled in module 'go-containers'" -> just click _Enable Go support_. It'll add:
++
+[source,xml,options="nowrap"]
+----
+<component name="Go" enabled="true" />
+----
+to `go-containers.iml`.
