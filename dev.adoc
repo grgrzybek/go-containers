@@ -28,7 +28,6 @@ Idea showed an error and `Alt-Enter` suggested `go get -t github.com/spf13/cobra
 * `$GOPATH/pkg` was not affected
 
 Trying to build `hello/main.go` (with `package main` and `main()` function) from root directory of the project:
-
 ----
 10:04 $ go build
 no Go files in /home/ggrzybek/sources/github.com/grgrzybek/go-containers
@@ -39,4 +38,113 @@ package cmd/hello is not in GOROOT (/usr/lib/golang/src/cmd/hello)
 10:04 $ go build -o bin/hello github.com/grgrzybek/go-containers/cmd/hello
 cmd/hello/main.go:19:8: no required module provides package github.com/spf13/cobra; to add it:
 	go get github.com/spf13/cobra
+----
+
+Then I simply run `go mod tidy`:
+----
+10:21 $ go mod tidy
+go: finding module for package github.com/spf13/cobra
+go: downloading github.com/spf13/cobra v1.2.1
+go: found github.com/spf13/cobra in github.com/spf13/cobra v1.2.1
+go: downloading github.com/spf13/pflag v1.0.5
+go: downloading github.com/inconshreveable/mousetrap v1.0.0
+----
+
+This command compiled the required packages to `$GOPATH/pkg/mod`:
+
+* `cache/download` contains 440kB of data in `repo/org/project/[version/]@v` structure, mostly filled with metadata (`*.mod` and other tiny files), but there are exactly 3 zips:
++
+----
+$ pwd
+/data/sources-go/pkg/mod/cache/download
+
+$ find -name *.zip
+./github.com/spf13/cobra/@v/v1.2.1.zip
+./github.com/spf13/pflag/@v/v1.0.5.zip
+./github.com/inconshreveable/mousetrap/@v/v1.0.0.zip
+----
+* the above ZIPs are also unpacked directly `$GOPATH/pkg/mod/github.com`.
+* `cache/vcs` contains 695MB of data, where each subdirectory is a full, bare git repository
+
+Now building works:
+----
+10:25 $ go build -o bin/hello github.com/grgrzybek/go-containers/cmd/hello
+
+10:36 $ bin/hello
+Usage:
+  hello [flags]
+
+Flags:
+  -h, --help      help for hello
+  -v, --version   version for hello
+----
+
+And what's very important is that finally, `~/.cache/go-build` was created (~3MB).
+
+There are nice `go build` options that help us see what's being done under the hood:
+----
+10:42 $ go build -a -work -p 1 -x -o bin/hello github.com/grgrzybek/go-containers/cmd/hello
+WORK=/tmp/go-build2684950845
+mkdir -p $WORK/b006/
+cat >$WORK/b006/importcfg << 'EOF' # internal
+# import config
+EOF
+cd /home/ggrzybek/sources/github.com/grgrzybek/go-containers
+/usr/lib/golang/pkg/tool/linux_amd64/compile -o $WORK/b006/_pkg_.a -trimpath "$WORK/b006=>" -p internal/unsafeheader -std -complete -buildid cehMbw1z91TXY4QJ5t7M/cehMbw1z91TXY4QJ5t7M -goversion go1.16.8 -D "" -importcfg $WORK/b006/importcfg -pack -c=12 /usr/lib/golang/src/internal/unsafeheader/unsafeheader.go
+...
+----
+
+This command created (again after removing it initially) ~29MB `~/.cache/go-build` directory and also left (for investigation) `/tmp/go-build2684950845` directory.
+
+* most of the subdirectories (all named `bNNN`) contain pair of files: `importcfg` and `\_pkg_.a`, for example:
++
+----
+$ pwd
+/tmp/go-build2684950845/b006
+[ggrzybek@everfree] /tmp/go-build2684950845/b006
+$ go tool nm _pkg_.a
+     a5e ? go.cuinfo.packagename.internal/unsafeheader
+     9fc R runtime.gcbits.01
+     a82 R runtime.memequal128·f
+     a7a R runtime.memequal64·f
+         U runtime.memequal_varlen
+     854 R type.*internal/unsafeheader.Slice
+     934 R type.*internal/unsafeheader.String
+     a6a R type..eqfunc24
+     a13 R type..importpath.internal/unsafeheader.
+     a55 R type..importpath.unsafe.
+     9fd R type..namedata.*unsafeheader.Slice.
+     a3e R type..namedata.*unsafeheader.String.
+     a38 R type..namedata.Cap.
+     a2b R type..namedata.Data.
+     a32 R type..namedata.Len.
+         U type.int
+     88c R type.internal/unsafeheader.Slice
+     96c R type.internal/unsafeheader.String
+----
+* some subdirectories contain `\*.o` files as well - when there are also C files (CGO?) like `\*.h` or `\*.c` - these `\*.o` files are still not ELF objects, but files with `go object linux amd64` magic.
+* subdirectory `b001` seems to be special:
+** there's `exe/a.out` ELF binary inside
+** `importcfg` file seems to contain _direct_ dependencies:
++
+----
+# import config
+packagefile github.com/spf13/cobra=/tmp/go-build2684950845/b002/_pkg_.a
+packagefile runtime=/tmp/go-build2684950845/b008/_pkg_.a
+----
+** `importcfg.link` seems to be an index of all the referenced packages (name to location in work directory)
+
+And what's inside `~/.cache/go-build`?
+
+For example these files are the same (the _runtime_):
+
+* `~/.cache/go-build/9e/9e70599ddad7e4a840f7877d44a5717897bce92f80120d6fd6be333c1aad5479-d`
+* `/tmp/go-build2684950845/b008/_pkg_.a`
+
+The name *is* SHA256 of the content.
+
+Eventually, I got one new line in `go.mod`:
+[source,go]
+----
+require github.com/spf13/cobra v1.2.1
 ----
